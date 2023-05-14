@@ -85,6 +85,10 @@ jobs:
         with:
           terraform_wrapper: false
 
+      # Configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Terraform Login
+        run: terraform login ${{ secrets.TF_API_TOKEN }}
+        
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
         run: terraform init
