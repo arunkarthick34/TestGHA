@@ -113,7 +113,7 @@ jobs:
       # Generates an execution plan for Terraform
       - name: Terraform Plan
         id: terraform-plan
-        run: terraform plan -out=tfplan -var-file=dev.tfvars
+        run: terraform plan # -out=tfplan -var-file=dev.tfvars
         
       
     # steps:
