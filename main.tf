@@ -10,7 +10,7 @@ terraform {
 
 resource "azurerm_resource_group" "testgha" {
       name     = var.rg
-    location = location
+    location = "uk south"
   tags     = {
     Environment = var.environment
   }
