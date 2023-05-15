@@ -6,6 +6,7 @@ terraform {
       name = "gha_dev"
     }
   }
+  features {}
 }
 
 resource "azurerm_resource_group" "testgha" {
