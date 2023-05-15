@@ -5,8 +5,8 @@ terraform {
     workspaces {
       name = "gha_dev"
     }
+    features {}
   }
-  features {}
 }
 
 resource "azurerm_resource_group" "testgha" {
