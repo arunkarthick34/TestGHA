@@ -17,12 +17,3 @@ resource "azurerm_resource_group" "testgha" {
 }
 
 
-variable "rg" {
-  type = string
-  description = "name of the resource group"
-}
-
-variable "environment" {
-  type = string
-  description = "name of the environment"
-}
