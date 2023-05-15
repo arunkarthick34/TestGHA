@@ -45,9 +45,9 @@
 name: 'Terraform'
 
 on:
-  # push:
-  #   branches: [ "main" ]
-  # pull_request:
+  push:
+    branches: [ "main" ]
+  pull_request:
   workflow_dispatch:
 
 env:
@@ -78,7 +78,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: dev
+        # working-directory: dev
 
     env:
       TF_WORKSPACE: ${{ secrets.TF_WORKSPACE }}
