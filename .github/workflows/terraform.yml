@@ -110,12 +110,19 @@ jobs:
       - name: Terraform Format
         run: terraform fmt
 
-      # Generates an execution plan for Terraform
-      - name: Terraform Plan
-        id: terraform-plan
-        run: terraform plan # -out=tfplan -var-file=dev.tfvars
-          with:
-              creds: ${{ secrets.AZURE_CREDENTIALS }}
+      # # Generates an execution plan for Terraform
+      # - name: Terraform Plan
+      #   id: terraform-plan
+      #   run: terraform plan # -out=tfplan -var-file=dev.tfvars
+
+      # # Uploads the Terraform execution plan to Terraform Cloud for speculative plans
+      # - name: Terraform Cloud Upload Plan
+      #   if: github.event_name == 'pull_request'
+      #   run: terraform cloud push -name="GitHub Pull Request #$GITHUB_RUN_NUMBER" -var-file=dev.tfvars
+      
+      - name: Terraform Apply
+        id: terraform-apply
+        run: terraform apply -auto-approve -input=false      
         
       
     # steps:
