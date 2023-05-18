@@ -75,7 +75,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 'Az CLI login'
+    - name: Az CLI login
       uses: azure/login@v1.4.6
       with:
           creds: ${{ secrets.AZURE_CREDS }}
