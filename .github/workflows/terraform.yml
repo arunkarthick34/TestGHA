@@ -26,11 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     # env:
-      #this is needed since we are running terraform with read-only permissions
-      # ARM_SKIP_PROVIDER_REGISTRATION: true
-      env:
-        TF_CLOUD_ORGANIZATION: ${{vars.TFCB_ORG}}
-        TF_WORKSPACE: ${{vars.TF_WORKSPACE}}  
+    #   this is needed since we are running terraform with read-only permissions
+    #   ARM_SKIP_PROVIDER_REGISTRATION: true
+    env:
+      TF_CLOUD_ORGANIZATION: ${{vars.TFCB_ORG}}
+      TF_WORKSPACE: ${{vars.TF_WORKSPACE}}  
     outputs:
       tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
     
