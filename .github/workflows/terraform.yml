@@ -88,9 +88,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: actions/checkout@v2
-        name: Install Azure CLI
-        # run: sudo apt-get install azure-cli
+      - uses: actions/checkout@v3
+      - name: Install Azure CLI
+        run: sudo apt-get install azure-cli
 
       - name: Configure Terraform to use Azure CLI
         run: export PATH=$PATH:/usr/bin
