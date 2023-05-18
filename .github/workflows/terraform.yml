@@ -33,7 +33,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: iac
-        # path: /TestGHA
+        path: ${{ github.workspace }}/TestGHA
 
   terraform-plan:
     name: 'Terraform Plan'
