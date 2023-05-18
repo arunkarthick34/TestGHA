@@ -80,25 +80,25 @@ jobs:
       with:
           creds: ${{ secrets.AZURE_CREDS }}
 
-    # Install the latest version of the Terraform CLI
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        # terraform_wrapper: false
-        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    # # Install the latest version of the Terraform CLI
+    # - name: Setup Terraform
+    #   uses: hashicorp/setup-terraform@v2
+    #   with:
+    #     # terraform_wrapper: false
+    #     cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-      - uses: actions/checkout@v2
-      - name: Install Azure CLI
-        run: |
-          sudo apt-get install azure-cli
-      - name: Configure Terraform to use Azure CLI
-        run: |
-          export PATH=$PATH:/usr/bin
-          terraform init
-      - name: Deploy infrastructure to Azure
-        run: |
-          terraform plan
-          terraform apply
+    #   - uses: actions/checkout@v2
+    #   - name: Install Azure CLI
+    #     run: |
+    #       sudo apt-get install azure-cli
+    #   - name: Configure Terraform to use Azure CLI
+    #     run: |
+    #       export PATH=$PATH:/usr/bin
+    #       terraform init
+    #   - name: Deploy infrastructure to Azure
+    #     run: |
+    #       terraform plan
+    #       terraform apply
 
 
       
