@@ -1,9 +1,9 @@
 terraform {
   cloud {
-    organization = "Five9hot"
+    organization = "university-college-london"
 
     workspaces {
-      name = "gha_dev"
+      name = "TestGHA"
     }
   }
 }

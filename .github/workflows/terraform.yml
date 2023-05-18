@@ -46,14 +46,14 @@ name: 'Terraform'
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "sortenv" ]
   pull_request:
   workflow_dispatch:
 
-env:
-      GH_API_PAT: ${{ secrets.GHAPIPAT }}
-      TF_CLOUD_ORGANIZATION: ${{ vars.TERRAFORMCLOUDORGANISATIONNAME }}
-      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+# env:
+#       GH_API_PAT: ${{ secrets.GHAPIPAT }}
+#       TF_CLOUD_ORGANIZATION: ${{ vars.TFCB_ORG}}
+#       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
 permissions:
   contents: read
@@ -74,14 +74,14 @@ jobs:
   Terraform:
     name: "Terraform Plan"
     runs-on: ubuntu-latest    
-    environment: dev
+    # environment: dev
     defaults:
       run:
         shell: bash
         # working-directory: dev
 
-    env:
-      TF_WORKSPACE: ${{ secrets.TF_WORKSPACE }}
+    # env:
+      # TF_CLOUD_ORGANIZATION: ${{ secrets.TF_CLOUD_ORGANIZATION }}
 
     steps:
       # Checkout the repository to the GitHub Actions runner
@@ -107,8 +107,8 @@ jobs:
           
       # Checks that all Terraform configuration files adhere to a canonical format
       # Will fail the build if not
-      - name: Terraform Format
-        run: terraform fmt
+      # - name: Terraform Format
+      #   run: terraform fmt
 
       # # Generates an execution plan for Terraform
       # - name: Terraform Plan
@@ -120,9 +120,9 @@ jobs:
       #   if: github.event_name == 'pull_request'
       #   run: terraform cloud push -name="GitHub Pull Request #$GITHUB_RUN_NUMBER" -var-file=dev.tfvars
       
-      - name: Terraform Apply
-        id: terraform-apply
-        run: terraform apply -auto-approve -input=false      
+      # - name: Terraform Apply
+      #   id: terraform-apply
+      #   run: terraform apply -auto-approve -input=false      
         
       
     # steps:
