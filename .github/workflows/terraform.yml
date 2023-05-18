@@ -21,9 +21,23 @@ permissions:
 #   ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
 
 jobs:
+  upload-files:
+    name : 'Upload Files'
+    runs-on: windows-latest
+    environment: dev
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: iac artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: iac
+        path: iac
+
   terraform-plan:
     name: 'Terraform Plan'
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     environment: dev
     # env:
     #   this is needed since we are running terraform with read-only permissions
@@ -36,9 +50,12 @@ jobs:
     
 
     steps:
-    # Checkout the repository to the GitHub Actions runner
-    - name: Checkout
-      uses: actions/checkout@v3
+    # Download iac artifacts
+    - name: Download iac artifacts
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        workflow: 'terraform.yml'
+        name: iac     
 
     # Install the latest version of the Terraform CLI
     - name: Setup Terraform
