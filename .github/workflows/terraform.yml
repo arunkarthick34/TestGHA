@@ -33,12 +33,13 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: iac
-        path: iac
+        path: TestGHA
 
   terraform-plan:
     name: 'Terraform Plan'
     runs-on: windows-latest
     environment: dev
+    needs: [upload-files]
     # env:
     #   this is needed since we are running terraform with read-only permissions
     #   ARM_SKIP_PROVIDER_REGISTRATION: true
