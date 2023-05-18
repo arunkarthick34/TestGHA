@@ -1,11 +1,11 @@
 variable "rg" {
   type        = string
-  default     = "rg-dev"
+  default     = "rg-dev2"
   description = "name of the resource group"
 }
 
 variable "environment" {
   type        = string
-  default     = "dev"
+  default     = "dev2"
   description =   "name of the environment"
 }
