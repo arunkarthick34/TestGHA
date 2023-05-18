@@ -11,21 +11,21 @@
 terraform {
   required_providers {
     azurerm = {
-      source = "hashicorp/azurerm"
-      version = "3.56.0"
+      source  = "hashicorp/azurerm"
+      version =   "3.56.0"
     }
   }
 }
 
 provider "azurerm" {
-  # use_cli = true
-  features {}
+        # use_cli = true
+    features {}
 }
 
 resource "azurerm_resource_group" "testgha" {
       name     = var.rg
-    location = "uk south"
-  tags     = {
+  location = "uk south"
+  tags = {
     Environment = var.environment
   }
 }
