@@ -33,10 +33,10 @@ provider "azurerm" {
 }
 
 
-provider "azurerm" {
-        # use_cli = true
-    features {}
-}
+# provider "azurerm" {
+#         # use_cli = true
+#     features {}
+# }
 
 resource "azurerm_resource_group" "testgha" {
       name     = var.rg
