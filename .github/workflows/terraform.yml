@@ -84,7 +84,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: tfplan
-        path: tfplan
+        path: ${{github.workspace}}/tfplan
 
     # Create string output of Terraform Plan
     - name: Create String Output
@@ -132,7 +132,7 @@ jobs:
     if: github.ref == 'refs/heads/AzSample' 
     runs-on: ubuntu-latest
     environment: dev
-    # needs: [terraform-plan]
+    needs: [terraform-plan]
     
     steps:
     # Checkout the repository to the GitHub Actions runner
