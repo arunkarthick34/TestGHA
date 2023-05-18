@@ -110,10 +110,10 @@ jobs:
       # - name: Terraform Format
       #   run: terraform fmt
 
-      # # Generates an execution plan for Terraform
-      # - name: Terraform Plan
-      #   id: terraform-plan
-      #   run: terraform plan # -out=tfplan -var-file=dev.tfvars
+      # Generates an execution plan for Terraform
+      - name: Terraform Plan
+        id: terraform-plan
+        run: terraform plan # -out=tfplan -var-file=dev.tfvars
 
       # # Uploads the Terraform execution plan to Terraform Cloud for speculative plans
       # - name: Terraform Cloud Upload Plan
