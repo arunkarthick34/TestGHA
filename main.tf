@@ -8,14 +8,30 @@
 #   }
 # }
 
+# terraform {
+#   required_providers {
+#     azurerm = {
+#       source  = "hashicorp/azurerm"
+#       version =   "3.56.0"
+#     }
+#   }
+# }
+
 terraform {
   required_providers {
     azurerm = {
-      source  = "hashicorp/azurerm"
-      version =   "3.56.0"
+      source = "hashicorp/azurerm"
+      version = ">= 3.56.0"
     }
   }
+  cloud {}
 }
+
+provider "azurerm" {
+  features {}
+  skip_provider_registration = true
+}
+
 
 provider "azurerm" {
         # use_cli = true
