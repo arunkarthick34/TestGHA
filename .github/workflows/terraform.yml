@@ -30,17 +30,23 @@ jobs:
       TF_WORKSPACE: ${{vars.TF_WORKSPACE}} 
 
     steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+
     - uses: hashicorp/setup-terraform@v2
       with:
         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
         terraform_wrapper: true
       name: Terraform Install
 
-    - name: Upload IaC
-      uses: actions/upload-artifact@v3
-      with:
-        name: iac
-        path: ${{ github.workspace }}
+    # - name: Upload IaC
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: iac
+    #     path: ${{ github.workspace }}
+
+
 
     - name: Az CLI login
       uses: azure/login@v1.4.6
