@@ -1,134 +1,85 @@
-# This workflow installs the latest version of Terraform CLI and configures the Terraform CLI configuration file
-# with an API token for Terraform Cloud (app.terraform.io). On pull request events, this workflow will run
-# `terraform init`, `terraform fmt`, and `terraform plan` (speculative plan via Terraform Cloud). On push events
-# to the "main" branch, `terraform apply` will be executed.
-#
-# Documentation for `hashicorp/setup-terraform` is located here: https://github.com/hashicorp/setup-terraform
-#
-# To use this workflow, you will need to complete the following setup steps.
-#
-# 1. Create a `main.tf` file in the root of this repository with the `remote` backend and one or more resources defined.
-#   Example `main.tf`:
-#     # The configuration for the `remote` backend.
-#     terraform {
-#       backend "remote" {
-#         # The name of your Terraform Cloud organization.
-#         organization = "example-organization"
-#
-#         # The name of the Terraform Cloud workspace to store Terraform state files in.
-#         workspaces {
-#           name = "example-workspace"
-#         }
-#       }
-#     }
-#
-#     # An example resource that does nothing.
-#     resource "null_resource" "example" {
-#       triggers = {
-#         value = "A example resource that does nothing!"
-#       }
-#     }
-#
-#
-# 2. Generate a Terraform Cloud user API token and store it as a GitHub secret (e.g. TF_API_TOKEN) on this repository.
-#   Documentation:
-#     - https://www.terraform.io/docs/cloud/users-teams-organizations/api-tokens.html
-#     - https://help.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets
-#
-# 3. Reference the GitHub secret in step using the `hashicorp/setup-terraform` GitHub Action.
-#   Example:
-#     - name: Setup Terraform
-#       uses: hashicorp/setup-terraform@v1
-#       with:
-#         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-name: 'Terraform'
+name: iac_build'
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+    - linux
   pull_request:
-  workflow_dispatch:
+    branches:
+    - linux
 
-env:
-      GH_API_PAT: ${{ secrets.GHAPIPAT }}
-      TF_CLOUD_ORGANIZATION: ${{ vars.TERRAFORMCLOUDORGANISATIONNAME }}
-      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-
+#Special permissions required for OIDC authentication
 permissions:
+  id-token: write
   contents: read
   pull-requests: write
 
-# jobs:
-#   terraform:
-#     name: 'Terraform'
-#     runs-on: ubuntu-latest
-#     environment: dev
+#These environment variables are used by the terraform azure provider to setup OIDD authenticate. 
+# env:
+#   ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
+#   ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+#   ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
 
-#     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-#     defaults:
-#       run:
-#         shell: bash
-
-jobs: 
-  Terraform:
-    name: "Terraform Plan"
-    runs-on: ubuntu-latest    
-    environment: dev
-    defaults:
-      run:
-        shell: bash
-        # working-directory: dev
-
-    env:
-      TF_WORKSPACE: ${{ secrets.TF_WORKSPACE }}
+jobs:
+  Build:
+    runs-on: windows-latest
 
     steps:
-      # Checkout the repository to the GitHub Actions runner
-      - name: Checkout
-        uses: actions/checkout@v3
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
 
-      - name: 'Az CLI login'
-        uses: azure/login@v1.4.6
-        with:
-            creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Upload IaC
+      uses: actions/upload-artifact@v3
+      with:
+        name: iac
+        path: ${{ github.workspace }}
 
-      # Install the latest version of the Terraform CLI
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          # terraform_wrapper: false
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-    
-      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-      - name: Terraform Init
-        id: terraform-init
-        run: terraform init
-          
-      # Checks that all Terraform configuration files adhere to a canonical format
-      # Will fail the build if not
-      - name: Terraform Format
-        run: terraform fmt
-
-      # # Generates an execution plan for Terraform
-      # - name: Terraform Plan
-      #   id: terraform-plan
-      #   run: terraform plan # -out=tfplan -var-file=dev.tfvars
-
-      # # Uploads the Terraform execution plan to Terraform Cloud for speculative plans
-      # - name: Terraform Cloud Upload Plan
-      #   if: github.event_name == 'pull_request'
-      #   run: terraform cloud push -name="GitHub Pull Request #$GITHUB_RUN_NUMBER" -var-file=dev.tfvars
-      
-      - name: Terraform Apply
-        id: terraform-apply
-        run: terraform apply -auto-approve -input=false      
-        
-      
-    # steps:
-    # - uses: actions/checkout@v2.0.0
-    # - name: Setup Terraform
-    #   uses: hashicorp/setup-terraform@v2
+    # - name: Download IaC
+    #   id: download-artifact
+    #   uses: dawidd6/action-download-artifact@v2
     #   with:
-    #     terraform_version: 1.1.3
-    #     terraform_wrapper: false
+    #     workflow: build.yml
+    #     name: iac
+
+  terraform-plan:
+    name: 'Terraform Plan'
+    runs-on: windows-latest
+    environment: dev
+    needs: Build
+      # env:
+      #   this is needed since we are running terraform with read-only permissions
+      #   ARM_SKIP_PROVIDER_REGISTRATION: true
+    env:
+      TF_CLOUD_ORGANIZATION: ${{vars.TFCB_ORG}}
+      TF_WORKSPACE: ${{vars.TF_WORKSPACE}}  
+    outputs:
+      tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
+
+    steps:
+    - name: Download IaC Artifact
+      id: download-iac-artifact
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        workflow: build.yml
+        name: iac
+
+    - name: Az CLI login
+      uses: azure/login@v1.4.6
+      with:
+        creds: ${{ secrets.AZURE_CREDS }}
+          
+# Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+# Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+# Generates an execution plan for Terraform
+    - name: Terraform Plan
+      run: terraform plan
+# Apply Terraform changes
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
