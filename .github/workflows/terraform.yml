@@ -1,4 +1,4 @@
-name: 'Terraform Plan/Apply'
+name: 'Terraform Plan'
 
 on:
   push:
@@ -25,160 +25,94 @@ jobs:
     name : 'Upload Files'
     runs-on: windows-latest
     environment: dev
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: iac artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: iac
-        path: ${{ github.workspace }}/TestGHA
-
-  terraform-plan:
-    name: 'Terraform Plan'
-    runs-on: windows-latest
-    environment: dev
-    needs: [upload-files]
-    # env:
-    #   this is needed since we are running terraform with read-only permissions
-    #   ARM_SKIP_PROVIDER_REGISTRATION: true
     env:
       TF_CLOUD_ORGANIZATION: ${{vars.TFCB_ORG}}
-      TF_WORKSPACE: ${{vars.TF_WORKSPACE}}  
-    outputs:
-      tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
-    
+      TF_WORKSPACE: ${{vars.TF_WORKSPACE}} 
 
     steps:
-    # Download iac artifacts
-    - name: Download iac artifacts
-      uses: dawidd6/action-download-artifact@v2
-      with:
-        workflow: 'terraform.yml'
-        name: iac     
-
-    # Install the latest version of the Terraform CLI
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
+    - uses: hashicorp/setup-terraform@v2
       with:
         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-        terraform_wrapper: false
+        terraform_wrapper: true
+      name: Terraform Install
 
     - name: Az CLI login
       uses: azure/login@v1.4.6
       with:
           creds: ${{ secrets.AZURE_CREDS }}
 
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-    - name: Terraform Init
-      run: |
-        terraform init
-
-    # Checks that all Terraform configuration files adhere to a canonical format
-    # Will fail the build if not
-    # - name: Terraform Format
-      # run: terraform fmt -check
-      # run: terraform fmt -autocorrect
-    # Generates an execution plan for Terraform
-    # An exit code of 0 indicated no changes, 1 a terraform failure, 2 there are pending changes.
-    - name: Terraform Plan
-      id: tf-plan
-      run: |
-        export exitcode=0
-        terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
-
-        echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
-        
-        if [ $exitcode -eq 1 ]; then
-          echo Terraform Plan Failed!
-          exit 1
-        else 
-          exit 0
-        fi
-        
-    # # Save plan to artifacts  
-    # - name: Publish Terraform Plan
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: tfplan
-    #     path: ${{github.workspace}}/tfplan
-
-    # Create string output of Terraform Plan
-    - name: Create String Output
-      id: tf-plan-string
-      run: |
-        TERRAFORM_PLAN=$(terraform show -no-color tfplan)
-        
-        delimiter="$(openssl rand -hex 8)"
-        echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
-        echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
-        echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
-        echo "" >> $GITHUB_OUTPUT
-        echo '```terraform' >> $GITHUB_OUTPUT
-        echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
-        echo '```' >> $GITHUB_OUTPUT
-        echo "</details>" >> $GITHUB_OUTPUT
-        echo "${delimiter}" >> $GITHUB_OUTPUT
-      
-        terraform apply -auto-approve -input=false
-
-    #  # Publish Terraform Plan as task summary
-    # - name: Publish Terraform Plan to Task Summary
-    #   env:
-    #     SUMMARY: ${{ steps.tf-plan-string.outputs.summary }}
-    #   run: |
-    #     echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
-      
-    # # If this is a PR post the changes
-    # - name: Push Terraform Output to PR
-    #   # if: github.ref != 'refs/heads/main'
-    #   uses: actions/github-script@v6
-    #   env:
-    #     SUMMARY: "${{ steps.tf-plan-string.outputs.summary }}"
-    #   with:
-    #       github-token: ${{ secrets.GITHUB_TOKEN }}
-    #       script: |
-    #         const body = `${process.env.SUMMARY}`;
-    #         github.rest.issues.createComment({
-    #             issue_number: context.issue.number,
-    #             owner: context.repo.owner,
-    #             repo: context.repo.repo,
-    #             body: body
-    #         }) && needs.terraform-plan.outputs.tfplanExitCode == 2
-  #####################################################################################################              
-  # terraform-apply:
-  #   name: 'Terraform Apply'
-  #  if: github.ref == 'refs/heads/AzSample' 
-  #   runs-on: windows-latest
-  #   environment: dev
-  #   needs: [terraform-plan]
-    
-  #   steps:
-  #   # Checkout the repository to the GitHub Actions runner
-  #   - name: Checkout
-  #     uses: actions/checkout@v3
-
-  #   # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-  #   - name: Setup Terraform
-  #     uses: hashicorp/setup-terraform@v2
-
-  #   - name: Az CLI login
-  #     uses: azure/login@v1.4.6
-  #     with:
-  #         creds: ${{ secrets.AZURE_CREDS }}
-
-  #   # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-  #   - name: Terraform Init
-  #     run: terraform init
-
-  #   # Download saved plan from artifacts  
-  #   # - name: Download Terraform Plan
-  #   #   uses: actions/download-artifact@v3
-  #   #   with:
-  #   #     name: tfplan
-
-  #   # Terraform Apply
-  #   - name: Terraform Apply
-  #     run: terraform apply # -auto-approve tfplan
-      #############################################################################################
+    - uses: hashicorp/setup-terraform@v2
+            
+    - run: terraform init
+          
+    - id: plan
+      run: terraform plan -no-color
+          
+    - run: echo ${{ steps.plan.outputs.stdout }}
+    - run: echo ${{ steps.plan.outputs.stderr }}
+    - run: echo ${{ steps.plan.outputs.exitcode }}
+          
+name: 'Terraform Apply'
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
+        permissions:
+        pull-requests: write
+    steps:
+    - uses: actions/checkout@v3
+   - uses: hashicorp/setup-terraform@v2
+          
+  - name: Terraform fmt
+    id: fmt
+    run: terraform fmt -check
+    continue-on-error: true
+          
+          - name: Terraform Init
+            id: init
+            run: terraform init
+          
+          - name: Terraform Validate
+            id: validate
+            run: terraform validate -no-color
+          
+          - name: Terraform Plan
+            id: plan
+            run: terraform plan -no-color
+            continue-on-error: true
+          
+          - uses: actions/github-script@v6
+            if: github.event_name == 'pull_request'
+            env:
+              PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+            with:
+              github-token: ${{ secrets.GITHUB_TOKEN }}
+              script: |
+                const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+                #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+                #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+                <details><summary>Validation Output</summary>
+          
+                \`\`\`\n
+                ${{ steps.validate.outputs.stdout }}
+                \`\`\`
+          
+                </details>
+          
+                #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+          
+                <details><summary>Show Plan</summary>
+          
+                \`\`\`\n
+                ${process.env.PLAN}
+                \`\`\`
+          
+                </details>
+          
+                *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ github.workspace }}\`, Workflow: \`${{ github.workflow }}\`*`;
+          
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: output
+                })
